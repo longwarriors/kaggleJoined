@@ -6,11 +6,13 @@ from typing import List
 
 def inference(model, dl_inference: DataLoader, device) -> List[int]:
     model.eval()
+    all_preds = []
     with torch.no_grad():
         with tqdm(dl_inference, desc="推理中", leave=False) as pbar_inference:
-            for batch_idx, (X, _) in enumerate(pbar_inference):
+            for batch_idx, (X, *_) in enumerate(pbar_inference):
                 X = X.to(device)
                 logits = model(X)
                 preds = torch.argmax(logits, dim=-1)
-                pbar_inference.set_postfix({"batch_idx": batch_idx})
-    return preds.tolist()
+                all_preds.extend(preds.cpu().tolist())
+                pbar_inference.set_postfix({"batch": f"{batch_idx + 1}"})
+    return all_preds
