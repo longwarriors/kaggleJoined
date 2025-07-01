@@ -28,6 +28,7 @@ if project_root not in sys.path:
 # ========================================================================================#
 #                                   开始算法
 # ========================================================================================#
+
 from scripts import (
     save_checkpoint,
     load_checkpoint,
@@ -40,13 +41,14 @@ from datasets.cats_dogs import labelled_dogcat_set, inference_dogcat_set
 import torch
 from torch.utils.data import DataLoader, random_split
 from torch import nn, optim
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision.models import resnet18, ResNet18_Weights
 
 # 项目参数
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TRAIN_RATIO = 0.8
-BATCH_SIZE = 32
-NUM_EPOCHS = 20
+BATCH_SIZE = 512
+NUM_EPOCHS = 50
 CHECKPOINT_DIR = os.path.join(project_root, "checkpoints/classify_dogs_cats")
 if not os.path.exists(CHECKPOINT_DIR):
     os.makedirs(CHECKPOINT_DIR)
@@ -89,7 +91,9 @@ add_in_features = pre_model.fc.out_features  # 1000
 pre_model.fc = nn.Sequential(
     pre_model.fc,  # 保留原始 fc 层 (in_features=512, out_features=1000)
     nn.ReLU(),
-    nn.Linear(add_in_features, 2),  # 2 classes
+    nn.Linear(add_in_features, 64),
+    nn.ReLU(),
+    nn.Linear(64, 2),  # 2 classes
 ).to(DEVICE)
 print(f"修改后的最后一层: {pre_model.fc}")
 
@@ -99,14 +103,15 @@ for param in pre_model.parameters():
 for param in pre_model.fc.parameters():
     param.requires_grad = True
 
-# 定义损失函数和优化器
+# 定义损失函数、优化器、学习率调度器
 criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(
     filter(lambda p: p.requires_grad, pre_model.parameters()), lr=0.001
 )
+scheduler = CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS//2, eta_min=1e-6)
 
 # 早停
-early_stopping = EarlyStopping(patience=5, delta=1e-4, mode="max")
+early_stopping = EarlyStopping(patience=7, delta=4e-5, mode="max")
 
 # 断点续训练
 if os.path.exists(os.path.join(CHECKPOINT_DIR, "best.pth")):
@@ -135,6 +140,10 @@ for epoch in range(NUM_EPOCHS):
         print("早停触发!")
         break
 
+    # 学习率调度
+    scheduler.step()
+    print(f"当前学习率: {scheduler.get_last_lr()[0]:.2e}")
+
     # 保存最佳模型
     if valid_acc > best_acc:
         best_acc = valid_acc
@@ -146,4 +155,4 @@ for epoch in range(NUM_EPOCHS):
             valid_acc,
             best_ckpt_file_path,
         )
-    print(f"\n最佳验证准确率: {valid_acc:.4f}")
+    print(f"最佳验证准确率: {valid_acc:.4f}\n")
