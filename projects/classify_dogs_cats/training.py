@@ -24,7 +24,6 @@ project_root = get_project_root()
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-
 # ========================================================================================#
 #                                   开始算法
 # ========================================================================================#
@@ -37,7 +36,7 @@ from scripts import (
     train_epoch,
     validate_epoch,
 )
-from datasets.cats_dogs import labelled_dogcat_set, inference_dogcat_set
+from datasets.cats_dogs import labelled_dogcat_set
 import torch
 from torch.utils.data import DataLoader, random_split
 from torch import nn, optim
@@ -56,20 +55,15 @@ best_ckpt_file_path = os.path.join(CHECKPOINT_DIR, "best.pth")
 
 # 数据集
 labelled_set_size = len(labelled_dogcat_set)
-unlabelled_set_size = len(inference_dogcat_set)
+
 train_size = int(TRAIN_RATIO * labelled_set_size)
 valid_size = labelled_set_size - train_size
-print(
-    f"训练集大小: {train_size}, 验证集大小: {valid_size}, 测试集大小: {unlabelled_set_size}"
-)
+print(f"训练集大小: {train_size}, 验证集大小: {valid_size}")
 
 train_set, valid_set = random_split(labelled_dogcat_set, [train_size, valid_size])
 train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
 valid_loader = DataLoader(
     valid_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=0
-)
-infer_loader = DataLoader(
-    inference_dogcat_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=0
 )
 
 class_weights = calculate_class_weights(
@@ -91,9 +85,9 @@ add_in_features = pre_model.fc.out_features  # 1000
 pre_model.fc = nn.Sequential(
     pre_model.fc,  # 保留原始 fc 层 (in_features=512, out_features=1000)
     nn.ReLU(),
-    nn.Linear(add_in_features, 64),
+    nn.Linear(add_in_features, 50),
     nn.ReLU(),
-    nn.Linear(64, 2),  # 2 classes
+    nn.Linear(50, 2),  # 2 classes
 ).to(DEVICE)
 print(f"修改后的最后一层: {pre_model.fc}")
 
@@ -106,12 +100,12 @@ for param in pre_model.fc.parameters():
 # 定义损失函数、优化器、学习率调度器
 criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(
-    filter(lambda p: p.requires_grad, pre_model.parameters()), lr=0.001
+    filter(lambda p: p.requires_grad, pre_model.parameters()), lr=2e-03
 )
-scheduler = CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS//2, eta_min=1e-6)
+scheduler = CosineAnnealingLR(optimizer, T_max=200, eta_min=1e-6)
 
 # 早停
-early_stopping = EarlyStopping(patience=7, delta=4e-5, mode="max")
+early_stopping = EarlyStopping(patience=7, delta=1e-4, mode="max")
 
 # 断点续训练
 if os.path.exists(os.path.join(CHECKPOINT_DIR, "best.pth")):
