@@ -1,4 +1,4 @@
-import torch
+import torch, os
 import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -221,3 +221,72 @@ def validate_epoch(model, dl_valid: DataLoader, loss_fn, device) -> Tuple[float,
     avg_epoch_loss = total_loss / total_samples
     avg_epoch_accuracy = total_correct / total_samples
     return avg_epoch_loss, avg_epoch_accuracy
+
+
+def train_loop_with_resume(
+    pre_model,
+    train_loader,
+    valid_loader,
+    criterion,
+    optimizer,
+    scheduler,
+    early_stopping,
+    best_ckpt_file_path,
+    num_epochs,
+    device,
+):
+    # 训练表征曲线记录
+    history = {
+        "train_loss": [],
+        "train_acc": [],
+        "valid_loss": [],
+        "valid_acc": [],
+    }
+    # 断点续训练
+    if os.path.exists(best_ckpt_file_path):
+        start_epoch, best_acc = load_checkpoint(
+            best_ckpt_file_path, pre_model, optimizer, scheduler, device
+        )
+        print(
+            f"加载训练点模型成功，当前准确率为{best_acc:.4f}，从第{start_epoch}个epoch开始训练..."
+        )
+    else:
+        start_epoch = 0
+        best_acc = 0.0
+        print("未找到检查点，从头开始训练...")
+
+    for epoch in range(start_epoch, num_epochs):
+        print(f"\nEpoch {epoch + 1}/{num_epochs}")
+        print("-" * 50)
+        train_loss, train_acc = train_epoch(
+            pre_model, train_loader, optimizer, criterion, device
+        )
+        valid_loss, valid_acc = validate_epoch(
+            pre_model, valid_loader, criterion, device
+        )
+        print(f"当前验证准确率: {valid_acc:.4f}")
+        # 记录历史
+        history["train_loss"].append(train_loss)
+        history["train_acc"].append(train_acc)
+        history["valid_loss"].append(valid_loss)
+        history["valid_acc"].append(valid_acc)
+
+        # 早停
+        early_stopping(valid_acc)
+        if early_stopping.early_stop:
+            print("早停触发!")
+            break
+
+        # 学习率调度
+        scheduler.step()
+        print(f"当前学习率: {scheduler.get_last_lr()[0]:.2e}")
+
+        # 保存最佳模型
+        if valid_acc > best_acc:
+            best_acc = valid_acc
+            print(f"更新最佳验证准确率: {best_acc:.4f}")
+            save_checkpoint(
+                pre_model, optimizer, scheduler, epoch, valid_acc, best_ckpt_file_path
+            )
+
+    return best_acc, history
