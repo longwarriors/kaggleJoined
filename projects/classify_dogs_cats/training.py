@@ -35,6 +35,7 @@ from scripts import (
     EarlyStopping,
     train_epoch,
     validate_epoch,
+    train_loop_with_resume,
 )
 from datasets.cats_dogs import labelled_dogcat_set
 import torch
@@ -45,9 +46,9 @@ from torchvision.models import resnet18, ResNet18_Weights
 
 # 项目参数
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-TRAIN_RATIO = 0.8
-BATCH_SIZE = 512
-NUM_EPOCHS = 50
+TRAIN_RATIO = 0.65
+BATCH_SIZE = 64
+NUM_EPOCHS = 100
 CHECKPOINT_DIR = os.path.join(project_root, "checkpoints/classify_dogs_cats")
 if not os.path.exists(CHECKPOINT_DIR):
     os.makedirs(CHECKPOINT_DIR)
@@ -85,9 +86,9 @@ add_in_features = pre_model.fc.out_features  # 1000
 pre_model.fc = nn.Sequential(
     pre_model.fc,  # 保留原始 fc 层 (in_features=512, out_features=1000)
     nn.ReLU(),
-    nn.Linear(add_in_features, 50),
+    nn.Linear(add_in_features, 20),
     nn.ReLU(),
-    nn.Linear(50, 2),  # 2 classes
+    nn.Linear(20, 2),  # 2 classes
 ).to(DEVICE)
 print(f"修改后的最后一层: {pre_model.fc}")
 
@@ -100,53 +101,30 @@ for param in pre_model.fc.parameters():
 # 定义损失函数、优化器、学习率调度器
 criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(
-    filter(lambda p: p.requires_grad, pre_model.parameters()), lr=2e-03
+    filter(lambda p: p.requires_grad, pre_model.parameters()), lr=3e-03
 )
-scheduler = CosineAnnealingLR(optimizer, T_max=200, eta_min=1e-6)
+scheduler = CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
 
 # 早停
 early_stopping = EarlyStopping(patience=7, delta=1e-4, mode="max")
 
-# 断点续训练
-if os.path.exists(os.path.join(CHECKPOINT_DIR, "best.pth")):
-    start_epoch, best_acc = load_checkpoint(
-        best_ckpt_file_path, pre_model, optimizer, None, DEVICE
-    )
-    print(
-        f"加载训练点模型成功，当前准确率为{best_acc:.4f}，从第{start_epoch}个epoch开始训练..."
-    )
-else:
-    start_epoch = 0
-    best_acc = 0.0
+# 检查点
+ckpt = os.path.join(CHECKPOINT_DIR, "best.pth")
 
-print("开始训练...")
-for epoch in range(NUM_EPOCHS):
-    print(f"\nEpoch {epoch + 1}/{NUM_EPOCHS}")
-    print("-" * 50)
-    train_loss, train_acc = train_epoch(
-        pre_model, train_loader, optimizer, criterion, DEVICE
-    )
-    valid_loss, valid_acc = validate_epoch(pre_model, valid_loader, criterion, DEVICE)
-
-    # 早停
-    early_stopping(valid_acc)
-    if early_stopping.early_stop:
-        print("早停触发!")
-        break
-
-    # 学习率调度
-    scheduler.step()
-    print(f"当前学习率: {scheduler.get_last_lr()[0]:.2e}")
-
-    # 保存最佳模型
-    if valid_acc > best_acc:
-        best_acc = valid_acc
-        best_ckpt = save_checkpoint(
-            pre_model,
-            optimizer,
-            None,
-            epoch,
-            valid_acc,
-            best_ckpt_file_path,
-        )
-    print(f"最佳验证准确率: {valid_acc:.4f}\n")
+# 训练
+accuracy, discord = train_loop_with_resume(
+    pre_model,
+    train_loader,
+    valid_loader,
+    criterion,
+    optimizer,
+    scheduler,
+    early_stopping,
+    best_ckpt_file_path,
+    NUM_EPOCHS,
+    DEVICE,
+)
+print(f"训练过程损失: {discord['train_loss']}")
+print(f"训练过程准确率: {discord['train_acc']}")
+print(f"验证过程损失: {discord['valid_loss']}")
+print(f"验证过程准确率: {discord['valid_acc']}")
