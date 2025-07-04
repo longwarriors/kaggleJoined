@@ -31,6 +31,7 @@ from torchvision.models import resnet18, ResNet18_Weights
 from scripts import inference_with_ids, create_submission_csv
 from datasets.cats_dogs import inference_dogcat_set
 from torch.utils.data import DataLoader
+from datetime import datetime
 
 print("开始推理测试集...")
 
@@ -50,15 +51,13 @@ print(f"使用设备: {DEVICE}")
 # 重新创建模型结构（与训练时相同）
 print("创建模型结构...")
 pre_model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).to(DEVICE)
-
-# 修改最后一层适应二分类（与训练时相同）
 add_in_features = pre_model.fc.out_features  # 1000
 pre_model.fc = nn.Sequential(
     pre_model.fc,  # 保留原始 fc 层 (in_features=512, out_features=1000)
     nn.ReLU(),
-    nn.Linear(add_in_features, 50),
+    nn.Linear(add_in_features, 20),
     nn.ReLU(),
-    nn.Linear(50, 2),  # 2 classes
+    nn.Linear(20, 2),  # 2 classes
 ).to(DEVICE)
 
 # 加载训练好的权重
@@ -99,8 +98,12 @@ assert (
 print(f"推理完成! 共处理 {len(all_ids)} 张图片")
 print(f"预测结果分布: {pd.Series(all_preds).value_counts().to_dict()}")
 
+# 获取当前时间，格式为“年月日时分”
+timestamp = datetime.now().strftime("%Y%m%d%H%M")
+
 # 创建提交文件
-output_path = os.path.join(project_root, "projects/classify_dogs_cats/submission.csv")
+filename = f"submission_{timestamp}.csv"
+output_path = os.path.join(project_root, "projects/classify_dogs_cats", filename)
 submission_df = create_submission_csv(all_ids, all_preds, output_path)
 
 print(f"\n提交文件预览:")
