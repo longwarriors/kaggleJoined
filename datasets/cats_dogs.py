@@ -1,6 +1,7 @@
-from torchvision import transforms
-from torch.utils.data import Dataset
 import os
+from torchvision import transforms
+from torch.utils.data import Dataset, Subset
+from sklearn.model_selection import train_test_split
 from PIL import Image
 from typing import Optional
 
@@ -50,15 +51,17 @@ class DogCatDataset(Dataset):
 
 # 创建数据集和加载器
 transform = {
-    "train": transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.RandomCrop(224),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    ),
+    "train": transforms.Compose([
+    transforms.Resize(256),                           # 保证图片足够大
+    transforms.RandomResizedCrop(224, scale=(0.6, 1.0)),  # 随机裁剪并缩放（模拟不同拍摄距离）
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomVerticalFlip(p=0.2),             # 加一点点竖直翻转扰动
+    transforms.RandomRotation(15),
+    transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                         std=[0.229, 0.224, 0.225])
+]),
     "val": transforms.Compose(
         [
             transforms.Resize(256),
@@ -83,9 +86,9 @@ def get_project_root():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.dirname(current_dir)
 
-
+# https://claude.ai/chat/2bd3c660-6cb3-4b4a-af1b-55a881069c15
 PROJECT_ROOT = get_project_root()
-
+# TRAIN_RATIO = 0.65
 labelled_dogcat_set = DogCatDataset(
     root_dir=os.path.join(
         PROJECT_ROOT, "data/raw/kaggle-dogs-vs-cats-redux-kernels-edition/train"
@@ -93,6 +96,12 @@ labelled_dogcat_set = DogCatDataset(
     transform=transform["train"],
     is_train=True,
 )
+# labelled_set_size = len(labelled_dogcat_set)
+# all_indices = list(range(labelled_set_size))
+# train_idx, valid_idx = train_test_split(all_indices, train_size=TRAIN_RATIO, random_state=42)
+# train_set = Subset(labelled_dogcat_set, train_idx)
+# valid_set = Subset(labelled_dogcat_set, valid_idx)
+
 inference_dogcat_set = DogCatDataset(
     root_dir=os.path.join(
         PROJECT_ROOT, "data/raw/kaggle-dogs-vs-cats-redux-kernels-edition/test"

@@ -33,8 +33,6 @@ from scripts import (
     load_checkpoint,
     calculate_class_weights,
     EarlyStopping,
-    train_epoch,
-    validate_epoch,
     train_loop_with_resume,
 )
 from datasets.cats_dogs import labelled_dogcat_set
@@ -46,8 +44,8 @@ from torchvision.models import resnet18, ResNet18_Weights
 
 # 项目参数
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-TRAIN_RATIO = 0.65
-BATCH_SIZE = 64
+TRAIN_RATIO = 0.85
+BATCH_SIZE = 256
 NUM_EPOCHS = 100
 CHECKPOINT_DIR = os.path.join(project_root, "checkpoints/classify_dogs_cats")
 if not os.path.exists(CHECKPOINT_DIR):
@@ -101,7 +99,7 @@ for param in pre_model.fc.parameters():
 # 定义损失函数、优化器、学习率调度器
 criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(
-    filter(lambda p: p.requires_grad, pre_model.parameters()), lr=3e-03
+    filter(lambda p: p.requires_grad, pre_model.parameters()), lr=1e-03
 )
 scheduler = CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
 
