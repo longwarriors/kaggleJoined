@@ -13,14 +13,14 @@
 
 ```
 projects/predict_crypto_timeseries/
-├── main.py                     # 主运行脚本
-├── data_preprocessing.py       # 数据预处理模块
+├── standalone_training.py     # 🎯 最终训练脚本（推荐使用）
+├── data_preprocessing.py      # 核心数据预处理模块
 ├── gradient_boosting_models.py # 梯度提升模型 (XGBoost, LightGBM)
-├── lstm_model.py              # LSTM深度学习模型
-├── model_evaluation.py        # 模型评估与集成
-├── prediction_submission.py   # 预测与提交
-├── downsample_parquet.py      # 数据降采样工具
-└── README.md                  # 说明文档
+├── lstm_model.py             # LSTM深度学习模型
+├── model_evaluation.py       # 模型评估与集成
+├── prediction_submission.py  # 预测与提交
+├── README.md                 # 说明文档
+└── SOLUTION_SUMMARY.md       # 解决方案总结
 ```
 
 ## 🚀 快速开始
@@ -43,22 +43,23 @@ data/raw/drw-crypto-market-prediction/
 └── sample_submission.csv
 ```
 
-### 3. 运行模式
+### 3. 运行训练
 
-#### 快速基线模型（推荐开始）
+#### 🎯 最终版本训练（推荐）
 ```bash
-python main.py --mode baseline --use_downsampled
+python standalone_training.py
 ```
 
-#### 数据分析
-```bash
-python main.py --mode data_analysis --use_downsampled
-```
+这个脚本将：
+- 使用完整数据集（525,887条训练数据）
+- 训练XGBoost和LightGBM模型
+- 生成集成预测
+- 创建符合竞赛要求的提交文件
 
-#### 完整管道
-```bash
-python main.py --mode full --use_lstm --tune_hyperparams
-```
+**预期结果**：
+- XGBoost验证集皮尔逊相关系数：~0.978
+- LightGBM验证集皮尔逊相关系数：~0.966
+- 训练时间：约9分钟
 
 ## 📊 功能特性
 
