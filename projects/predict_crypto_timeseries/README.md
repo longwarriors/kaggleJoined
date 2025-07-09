@@ -1,65 +1,67 @@
-# DRW 加密市场预测比赛解决方案
+# 加密货币时间序列预测项目
 
-这是一个完整的机器学习解决方案，用于参加 DRW 加密市场预测比赛。该解决方案实现了数据预处理、梯度提升模型、LSTM深度学习模型、模型集成和预测提交的完整管道。
+本项目实现了加密货币市场数据的时间序列预测，使用多种机器学习方法。
 
-## 🎯 比赛概述
+## 🎯 项目目标
 
-- **目标**: 预测加密货币未来价格变动
-- **评估指标**: 皮尔逊相关系数
-- **数据**: 专有生产特征 + 公共市场量统计数据
-- **数据规模**: 训练集 525,887 × 896，测试集 538,150 × 896
+预测加密货币市场的时间序列数据，目标是在Kaggle竞赛中获得高皮尔逊相关系数。
 
-## 📁 项目结构
+## 📊 性能进展
 
-```
-projects/predict_crypto_timeseries/
-├── standalone_training.py     # 🎯 最终训练脚本（推荐使用）
-├── data_preprocessing.py      # 核心数据预处理模块
-├── gradient_boosting_models.py # 梯度提升模型 (XGBoost, LightGBM)
-├── lstm_model.py             # LSTM深度学习模型
-├── model_evaluation.py       # 模型评估与集成
-├── prediction_submission.py  # 预测与提交
-├── README.md                 # 说明文档
-└── SOLUTION_SUMMARY.md       # 解决方案总结
-```
+| 版本 | Kaggle分数 | 验证分数 | 策略 | 状态 |
+|------|-----------|----------|------|------|
+| 复杂特征工程 | 0.04497 | 0.4779 | 过度复杂 | ❌ 过拟合 |
+| **极简线性模型** | **0.068** | **0.1396** | **纯线性回归** | **✅ 成功** |
 
-## 🚀 快速开始
+## 🔧 核心文件
 
-### 1. 环境准备
+### 主要训练脚本
+- `ultra_simple_training.py` - **极简稳定训练**（最佳性能）
+- `lstm_enhanced_training.py` - LSTM增强训练
+- `lstm_model.py` - LSTM模型实现
 
-确保安装以下依赖包：
+### 工具文件
+- `data_preprocessing.py` - 数据预处理工具
+- `gradient_boosting_models.py` - 梯度提升模型
+- `model_evaluation.py` - 模型评估工具
+- `prediction_submission.py` - 预测提交生成
+
+## 🚀 使用方法
+
+### 1. 极简训练（推荐）
 
 ```bash
-pip install pandas numpy scikit-learn xgboost lightgbm torch matplotlib seaborn scipy joblib
+python ultra_simple_training.py
 ```
 
-### 2. 数据准备
+- 使用15个最重要的原始特征
+- 纯Ridge回归模型
+- 避免过拟合，泛化能力强
 
-确保数据文件位于正确位置：
-```
-data/raw/drw-crypto-market-prediction/
-├── train.parquet
-├── test.parquet
-└── sample_submission.csv
-```
+### 2. LSTM增强训练
 
-### 3. 运行训练
-
-#### 🎯 最终版本训练（推荐）
 ```bash
-python standalone_training.py
+python lstm_enhanced_training.py
 ```
 
-这个脚本将：
-- 使用完整数据集（525,887条训练数据）
-- 训练XGBoost和LightGBM模型
-- 生成集成预测
-- 创建符合竞赛要求的提交文件
+- 结合LSTM和Ridge回归
+- 20个特征，时间序列建模
+- 更高的验证性能
 
-**预期结果**：
-- XGBoost验证集皮尔逊相关系数：~0.978
-- LightGBM验证集皮尔逊相关系数：~0.966
-- 训练时间：约9分钟
+## 🎯 关键经验
+
+### ✅ 成功策略
+
+1. **极简特征选择**: 只使用最重要的原始特征
+2. **纯线性模型**: Ridge回归避免过拟合
+3. **稳定预测**: 确保训练集和测试集一致性
+4. **简单集成**: 多个Ridge模型的简单平均
+
+### ❌ 失败教训
+
+1. **复杂特征工程**: 导致严重过拟合
+2. **深度模型**: 在小数据集上不稳定
+3. **过度优化**: 验证集性能高但实际性能差
 
 ## 📊 功能特性
 
