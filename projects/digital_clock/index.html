@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock - Multiple Time Zones</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Digital Clock</h1>
+            <p class="subtitle">Current time in various time zones</p>
+        </header>
+        
+        <main class="clocks-grid">
+            <div class="clock-card">
+                <h2 class="timezone-name">Local Time</h2>
+                <div class="time-display" id="local-time">--:--:--</div>
+                <div class="date-display" id="local-date">-- -- ----</div>
+            </div>
+            
+            <div class="clock-card">
+                <h2 class="timezone-name">UTC</h2>
+                <div class="time-display" id="utc-time">--:--:--</div>
+                <div class="date-display" id="utc-date">-- -- ----</div>
+            </div>
+            
+            <div class="clock-card">
+                <h2 class="timezone-name">New York</h2>
+                <div class="time-display" id="newyork-time">--:--:--</div>
+                <div class="date-display" id="newyork-date">-- -- ----</div>
+            </div>
+            
+            <div class="clock-card">
+                <h2 class="timezone-name">London</h2>
+                <div class="time-display" id="london-time">--:--:--</div>
+                <div class="date-display" id="london-date">-- -- ----</div>
+            </div>
+            
+            <div class="clock-card">
+                <h2 class="timezone-name">Tokyo</h2>
+                <div class="time-display" id="tokyo-time">--:--:--</div>
+                <div class="date-display" id="tokyo-date">-- -- ----</div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Updates every second automatically</p>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
