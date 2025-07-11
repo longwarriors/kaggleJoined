@@ -7,6 +7,14 @@ logs/
 checkpoints/
 *.log
 
+# Temporary files and scripts
+*.bat
+*.sh
+*.tmp
+temp_*
+test_*
+debug_*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
