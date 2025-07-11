@@ -1,0 +1,55 @@
+# 数据路径配置
+datasets:
+  application_train: '../../data/raw/home-credit-default-risk/application_train.csv'
+  application_test: '../../data/raw/home-credit-default-risk/application_test.csv'
+  bureau: '../../data/raw/home-credit-default-risk/bureau.csv'
+  bureau_balance: '../../data/raw/home-credit-default-risk/bureau_balance.csv'
+  previous_application: '../../data/raw/home-credit-default-risk/previous_application.csv'
+  pos_cash_balance: '../../data/raw/home-credit-default-risk/POS_CASH_balance.csv'
+  credit_card_balance: '../../data/raw/home-credit-default-risk/credit_card_balance.csv'
+  installments_payments: '../../data/raw/home-credit-default-risk/installments_payments.csv'
+
+# 模型参数
+xgboost_params:
+  max_depth: 6
+  learning_rate: 0.02
+  n_estimators: 2000
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 3
+  reg_alpha: 0.1
+  reg_lambda: 0.1
+  objective: 'binary:logistic'
+  eval_metric: 'auc'
+  random_state: 42
+  n_jobs: -1
+
+# LightGBM参数
+lightgbm_params:
+  objective: 'binary'
+  metric: 'auc'
+  boosting_type: 'gbdt'
+  num_leaves: 31
+  learning_rate: 0.02
+  feature_fraction: 0.9
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  min_child_samples: 20
+  reg_alpha: 0.1
+  reg_lambda: 0.1
+  verbose: -1
+  random_state: 42
+  n_estimators: 2000
+  n_jobs: -1
+
+# 逻辑回归参数
+logistic_params:
+  C: 0.01
+  penalty: 'l2'
+  solver: 'liblinear'
+  random_state: 42
+
+# 训练参数
+training:
+  n_folds: 5
+  random_state: 42
