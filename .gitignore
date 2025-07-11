@@ -1,7 +1,7 @@
 # Data
 data/*
 !data/README.md    # 留下结构说明
-
+submissions/*.csv
 # Logs and outputs
 logs/
 checkpoints/
