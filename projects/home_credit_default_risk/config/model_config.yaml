@@ -1,0 +1,306 @@
+# 模型配置文件
+# 定义基线模型、高级模型和集成模型的参数
+
+# 基线模型配置
+baseline_models:
+  # 逻辑回归
+  logistic_regression:
+    enable: true
+    params:
+      C: 1.0
+      penalty: 'l2'
+      solver: 'liblinear'
+      max_iter: 1000
+      random_state: 42
+      class_weight: 'balanced'
+  
+  # 决策树
+  decision_tree:
+    enable: true
+    params:
+      max_depth: 10
+      min_samples_split: 20
+      min_samples_leaf: 10
+      random_state: 42
+      class_weight: 'balanced'
+  
+  # 随机森林
+  random_forest:
+    enable: true
+    params:
+      n_estimators: 100
+      max_depth: 10
+      min_samples_split: 20
+      min_samples_leaf: 10
+      random_state: 42
+      n_jobs: -1
+      class_weight: 'balanced'
+
+# 高级模型配置
+advanced_models:
+  # XGBoost
+  xgboost:
+    enable: true
+    params:
+      objective: 'binary:logistic'
+      eval_metric: 'auc'
+      max_depth: 6
+      learning_rate: 0.02
+      n_estimators: 2000
+      subsample: 0.8
+      colsample_bytree: 0.8
+      reg_alpha: 0.1
+      reg_lambda: 0.1
+      random_state: 42
+      n_jobs: -1
+      verbosity: 0
+    
+    # 早停配置
+    early_stopping:
+      enable: true
+      rounds: 100
+      verbose: false
+  
+  # LightGBM
+  lightgbm:
+    enable: true
+    params:
+      objective: 'binary'
+      metric: 'auc'
+      boosting_type: 'gbdt'
+      num_leaves: 31
+      learning_rate: 0.02
+      feature_fraction: 0.8
+      bagging_fraction: 0.8
+      bagging_freq: 5
+      min_child_samples: 20
+      reg_alpha: 0.1
+      reg_lambda: 0.1
+      random_state: 42
+      n_jobs: -1
+      verbosity: -1
+      n_estimators: 2000
+    
+    early_stopping:
+      enable: true
+      rounds: 100
+      verbose: false
+  
+  # CatBoost
+  catboost:
+    enable: true
+    params:
+      objective: 'Logloss'
+      eval_metric: 'AUC'
+      depth: 6
+      learning_rate: 0.02
+      iterations: 2000
+      l2_leaf_reg: 3
+      random_seed: 42
+      verbose: false
+      thread_count: -1
+      class_weights: [1, 1]  # 将根据数据自动调整
+    
+    early_stopping:
+      enable: true
+      rounds: 100
+
+# 神经网络模型配置
+neural_networks:
+  # 简单神经网络
+  simple_nn:
+    enable: false
+    params:
+      hidden_layers: [256, 128, 64]
+      dropout_rate: 0.3
+      learning_rate: 0.001
+      batch_size: 256
+      epochs: 100
+      early_stopping_patience: 10
+      validation_split: 0.2
+
+# 集成模型配置
+ensemble_models:
+  # 投票集成
+  voting:
+    enable: true
+    voting_type: 'soft'  # 'hard' or 'soft'
+    models:
+      - 'xgboost'
+      - 'lightgbm'
+      - 'catboost'
+  
+  # 平均集成
+  averaging:
+    enable: true
+    method: 'weighted'  # 'simple' or 'weighted'
+    models:
+      - 'xgboost'
+      - 'lightgbm'
+      - 'catboost'
+    
+    # 权重（如果使用加权平均）
+    weights: [0.4, 0.4, 0.2]
+  
+  # 堆叠集成
+  stacking:
+    enable: true
+    
+    # 第一层模型（基学习器）
+    base_models:
+      - 'xgboost'
+      - 'lightgbm'
+      - 'catboost'
+      - 'random_forest'
+    
+    # 第二层模型（元学习器）
+    meta_model: 'logistic_regression'
+    
+    # 交叉验证配置
+    cv_folds: 5
+    shuffle: true
+    random_state: 42
+
+# 模型评估配置
+evaluation:
+  # 评估指标
+  metrics:
+    - 'roc_auc'
+    - 'precision'
+    - 'recall'
+    - 'f1'
+    - 'accuracy'
+    - 'log_loss'
+  
+  # 主要指标（用于模型选择）
+  primary_metric: 'roc_auc'
+  
+  # 交叉验证配置
+  cross_validation:
+    method: 'stratified_kfold'  # 'kfold', 'stratified_kfold', 'time_series_split'
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  
+  # 验证集配置
+  validation:
+    method: 'holdout'  # 'holdout', 'cross_validation'
+    test_size: 0.2
+    random_state: 42
+    stratify: true
+
+# 超参数调优配置
+hyperparameter_tuning:
+  # 是否启用调优
+  enable: true
+  
+  # 调优方法
+  method: 'optuna'  # 'grid_search', 'random_search', 'optuna'
+  
+  # 调优预算
+  n_trials: 100  # 对于optuna
+  timeout: 3600  # 超时时间（秒）
+  
+  # 并行配置
+  n_jobs: -1
+  
+  # 调优的模型
+  models_to_tune:
+    - 'xgboost'
+    - 'lightgbm'
+    - 'catboost'
+  
+  # 搜索空间配置
+  search_spaces:
+    xgboost:
+      max_depth: [3, 4, 5, 6, 7, 8]
+      learning_rate: [0.01, 0.02, 0.05, 0.1]
+      n_estimators: [1000, 1500, 2000, 2500]
+      subsample: [0.7, 0.8, 0.9]
+      colsample_bytree: [0.7, 0.8, 0.9]
+      reg_alpha: [0, 0.1, 0.5, 1.0]
+      reg_lambda: [0, 0.1, 0.5, 1.0]
+    
+    lightgbm:
+      num_leaves: [15, 31, 63, 127]
+      learning_rate: [0.01, 0.02, 0.05, 0.1]
+      n_estimators: [1000, 1500, 2000, 2500]
+      feature_fraction: [0.7, 0.8, 0.9]
+      bagging_fraction: [0.7, 0.8, 0.9]
+      min_child_samples: [10, 20, 30]
+      reg_alpha: [0, 0.1, 0.5, 1.0]
+      reg_lambda: [0, 0.1, 0.5, 1.0]
+    
+    catboost:
+      depth: [4, 5, 6, 7, 8]
+      learning_rate: [0.01, 0.02, 0.05, 0.1]
+      iterations: [1000, 1500, 2000, 2500]
+      l2_leaf_reg: [1, 3, 5, 7, 9]
+
+# 模型保存配置
+model_saving:
+  # 是否保存模型
+  save_models: true
+  
+  # 保存路径
+  save_dir: './outputs/models'
+  
+  # 保存格式
+  format: 'joblib'  # 'joblib', 'pickle'
+  
+  # 是否保存最佳模型
+  save_best_only: true
+  
+  # 是否保存所有模型
+  save_all_models: false
+
+# 特征重要性配置
+feature_importance:
+  # 是否计算特征重要性
+  calculate: true
+  
+  # 重要性类型
+  importance_types:
+    - 'gain'  # 对于树模型
+    - 'split'  # 对于树模型
+    - 'permutation'  # 排列重要性
+  
+  # 是否绘制重要性图
+  plot_importance: true
+  
+  # 显示的特征数量
+  top_features: 50
+
+# 模型解释配置
+model_interpretation:
+  # 是否启用模型解释
+  enable: true
+  
+  # SHAP分析
+  shap_analysis:
+    enable: true
+    sample_size: 1000  # 用于SHAP分析的样本数量
+    plot_types:
+      - 'summary'
+      - 'waterfall'
+      - 'force'
+  
+  # 部分依赖图
+  partial_dependence:
+    enable: true
+    features: []  # 空列表表示自动选择重要特征
+
+# 性能监控配置
+performance_monitoring:
+  # 是否启用性能监控
+  enable: true
+  
+  # 监控指标
+  metrics_to_monitor:
+    - 'training_time'
+    - 'prediction_time'
+    - 'memory_usage'
+    - 'model_size'
+  
+  # 是否记录详细日志
+  detailed_logging: true

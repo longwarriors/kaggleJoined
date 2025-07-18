@@ -93,3 +93,86 @@ python main.py --config config.yaml --output submission.csv
 ## 许可证
 
 [License Information]
+
+---
+
+# 🔄 重构版本说明
+
+## 架构重构
+
+基于之前版本的成功经验（AUC 0.789），我们对项目进行了全面的架构重构，采用现代化的面向对象设计。
+
+### 🏗️ 新架构特点
+
+- **面向对象设计**: 所有组件基于抽象基类，遵循SOLID原则
+- **模块化架构**: 清晰的模块分离，高内聚低耦合
+- **配置驱动**: 通过YAML配置文件管理所有参数
+- **可扩展性**: 易于添加新模型、特征工程方法和评估指标
+- **可维护性**: 统一的日志系统、错误处理和代码规范
+
+### 📁 重构后目录结构
+
+```
+projects/home_credit_default_risk/
+├── core/                   # 核心基础模块
+│   ├── base.py            # 抽象基类定义
+│   ├── config.py          # 配置管理
+│   ├── logger.py          # 日志管理
+│   └── utils.py           # 通用工具函数
+├── data/                   # 数据处理模块
+│   ├── loader.py          # 数据加载
+│   ├── eda.py             # 探索性数据分析
+│   ├── cleaner.py         # 数据清洗
+│   └── validator.py       # 数据验证
+├── features/               # 特征工程模块
+│   ├── builder.py         # 特征构建
+│   ├── selector.py        # 特征选择
+│   ├── encoders.py        # 特征编码
+│   ├── aggregators.py     # 特征聚合
+│   └── transformers.py    # 特征变换
+├── models/                 # 模型模块
+│   ├── baseline.py        # 基线模型
+│   ├── trainers.py        # 高级模型训练
+│   ├── ensemble.py        # 集成建模
+│   ├── evaluator.py       # 模型评估
+│   └── optimizer.py       # 超参数优化
+├── pipeline/               # 流水线模块
+│   └── main_pipeline.py   # 主流水线
+├── config/                 # 配置文件目录
+│   ├── data_config.yaml   # 数据配置
+│   ├── feature_config.yaml # 特征工程配置
+│   └── model_config.yaml  # 模型配置
+└── main.py                 # 重构版主程序
+```
+
+### 🚀 重构版使用方法
+
+```bash
+# 运行完整流水线
+python main.py --mode full
+
+# 测试模式（使用模拟数据验证架构）
+python main.py --mode test
+
+# 测试重构后的架构
+python test_pipeline.py
+```
+
+### 💡 重构优势
+
+1. **代码质量**: 遵循最佳实践，代码更清晰、更易维护
+2. **可扩展性**: 新功能可以轻松集成，不影响现有代码
+3. **可测试性**: 模块化设计便于单元测试和集成测试
+4. **配置管理**: 统一的配置系统，便于实验管理
+5. **生产就绪**: 完善的错误处理、日志系统和性能监控
+
+### 🎯 保持的核心优势
+
+- ✅ 保留了原版本的所有特征工程技术
+- ✅ 保持了高性能的模型架构
+- ✅ 继承了成功的业务逻辑和领域知识
+- ✅ 维持了0.789的AUC性能目标
+
+---
+
+**重构版本说明**: 专注于代码架构和工程质量的提升，在保持原有性能的基础上，大幅提升了代码的可维护性、可扩展性和生产就绪程度。

@@ -1,0 +1,178 @@
+# 数据配置文件
+# 定义数据路径、验证规则和清洗参数
+
+# 数据路径配置
+data_paths:
+  # 主数据文件
+  application_train: '../../data/raw/home-credit-default-risk/application_train.csv'
+  application_test: '../../data/raw/home-credit-default-risk/application_test.csv'
+  
+  # 辅助数据文件
+  bureau: '../../data/raw/home-credit-default-risk/bureau.csv'
+  bureau_balance: '../../data/raw/home-credit-default-risk/bureau_balance.csv'
+  previous_application: '../../data/raw/home-credit-default-risk/previous_application.csv'
+  pos_cash_balance: '../../data/raw/home-credit-default-risk/POS_CASH_balance.csv'
+  credit_card_balance: '../../data/raw/home-credit-default-risk/credit_card_balance.csv'
+  installments_payments: '../../data/raw/home-credit-default-risk/installments_payments.csv'
+
+# 数据验证配置
+validation:
+  # 是否检查数据完整性
+  check_integrity: true
+  
+  # 是否检查缺失值
+  check_missing: true
+  
+  # 是否检查重复值
+  check_duplicates: true
+  
+  # 是否检查数据类型
+  check_dtypes: true
+  
+  # 必需的列（主表）
+  required_columns:
+    application_train: ['SK_ID_CURR', 'TARGET']
+    application_test: ['SK_ID_CURR']
+  
+  # 预期的数据形状（行数范围）
+  expected_shapes:
+    application_train: [300000, 310000]  # 预期行数范围
+    application_test: [48000, 50000]
+
+# 数据清洗配置
+cleaning:
+  # 缺失值处理
+  missing_values:
+    # 缺失值阈值（超过此比例的列将被删除）
+    drop_threshold: 0.95
+    
+    # 数值列填充策略
+    numerical_strategy: 'median'  # 'mean', 'median', 'mode', 'constant'
+    numerical_fill_value: 0
+    
+    # 类别列填充策略
+    categorical_strategy: 'mode'  # 'mode', 'constant'
+    categorical_fill_value: 'Unknown'
+    
+    # 是否创建缺失值指示器
+    create_missing_indicators: true
+  
+  # 异常值处理
+  outliers:
+    # 异常值检测方法
+    detection_method: 'iqr'  # 'iqr', 'zscore', 'isolation_forest'
+    
+    # IQR方法参数
+    iqr_factor: 1.5
+    
+    # Z-score方法参数
+    zscore_threshold: 3.0
+    
+    # 异常值处理策略
+    treatment: 'clip'  # 'clip', 'remove', 'transform'
+    
+    # 需要处理异常值的列（如果为空则处理所有数值列）
+    columns_to_process: []
+  
+  # 数据类型转换
+  dtype_conversion:
+    # 是否自动推断数据类型
+    auto_infer: true
+    
+    # 强制转换的数据类型
+    force_conversions:
+      # 示例：将某些列强制转换为特定类型
+      # 'DAYS_BIRTH': 'int32'
+      # 'AMT_INCOME_TOTAL': 'float32'
+    
+    # 类别列的处理
+    categorical_columns:
+      # 自动检测类别列的阈值（唯一值数量）
+      auto_detect_threshold: 50
+      
+      # 强制指定的类别列
+      force_categorical: []
+  
+  # 重复值处理
+  duplicates:
+    # 是否删除重复行
+    drop_duplicates: false
+    
+    # 保留重复行的策略
+    keep: 'first'  # 'first', 'last', false
+    
+    # 用于判断重复的列（如果为空则使用所有列）
+    subset: []
+
+# 数据采样配置（用于开发和测试）
+sampling:
+  # 是否启用采样
+  enable_sampling: false
+  
+  # 采样方法
+  method: 'random'  # 'random', 'stratified'
+  
+  # 采样比例或数量
+  sample_size: 0.1  # 如果 < 1 则为比例，>= 1 则为具体数量
+  
+  # 随机种子
+  random_state: 42
+  
+  # 分层采样的目标列
+  stratify_column: 'TARGET'
+
+# 内存优化配置
+memory_optimization:
+  # 是否启用内存优化
+  enable: true
+  
+  # 是否减少数据类型精度
+  reduce_dtypes: true
+  
+  # 是否在处理后清理内存
+  cleanup_after_processing: true
+  
+  # 内存使用监控
+  monitor_memory: true
+
+# 数据分割配置
+data_split:
+  # 验证集比例
+  validation_size: 0.2
+  
+  # 测试集比例（如果需要进一步分割）
+  test_size: 0.0
+  
+  # 随机种子
+  random_state: 42
+  
+  # 是否进行分层分割
+  stratify: true
+  
+  # 分层分割的目标列
+  stratify_column: 'TARGET'
+
+# 数据缓存配置
+caching:
+  # 是否启用缓存
+  enable: true
+  
+  # 缓存目录
+  cache_dir: './cache/data'
+  
+  # 缓存格式
+  format: 'parquet'  # 'parquet', 'pickle', 'csv'
+  
+  # 缓存过期时间（小时）
+  expiry_hours: 24
+
+# 并行处理配置
+parallel:
+  # 是否启用并行处理
+  enable: true
+  
+  # 并行进程数（-1表示使用所有CPU）
+  n_jobs: -1
+  
+  # 批处理大小
+  batch_size: 10000

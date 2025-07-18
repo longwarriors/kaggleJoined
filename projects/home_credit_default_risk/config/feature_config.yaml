@@ -1,0 +1,362 @@
+# 特征工程配置文件
+# 定义特征构建、选择和转换的参数
+
+# 数值特征处理配置
+numerical_features:
+  # 标准化/归一化配置
+  scaling:
+    # 缩放方法: 'standard', 'minmax', 'robust', 'quantile'
+    method: 'standard'
+    
+    # 是否对所有数值特征进行缩放
+    scale_all: false
+    
+    # 需要缩放的特征列表（如果为空则根据scale_all决定）
+    columns_to_scale: []
+    
+    # 是否保留原始特征
+    keep_original: true
+  
+  # 分箱/离散化配置
+  binning:
+    # 是否启用分箱
+    enable: true
+    
+    # 分箱策略: 'quantile', 'uniform', 'kmeans'
+    strategy: 'quantile'
+    
+    # 分箱数量
+    n_bins: 5
+    
+    # 需要分箱的特征
+    columns_to_bin:
+      - 'AMT_INCOME_TOTAL'
+      - 'AMT_CREDIT'
+      - 'AMT_ANNUITY'
+      - 'DAYS_BIRTH'
+      - 'DAYS_EMPLOYED'
+    
+    # 分箱后的编码方式: 'ordinal', 'onehot'
+    encode: 'ordinal'
+  
+  # 数学变换配置
+  transformations:
+    # 对数变换
+    log_transform:
+      enable: true
+      # 需要对数变换的特征
+      columns:
+        - 'AMT_INCOME_TOTAL'
+        - 'AMT_CREDIT'
+        - 'AMT_ANNUITY'
+      # 是否使用log1p（避免零值问题）
+      use_log1p: true
+    
+    # 幂变换
+    power_transform:
+      enable: false
+      # 变换方法: 'box-cox', 'yeo-johnson'
+      method: 'yeo-johnson'
+      columns: []
+    
+    # 平方根变换
+    sqrt_transform:
+      enable: false
+      columns: []
+
+# 类别特征处理配置
+categorical_features:
+  # 编码方法配置
+  encoding:
+    # 低基数特征的编码方法: 'onehot', 'label', 'target'
+    low_cardinality_method: 'onehot'
+    
+    # 高基数特征的编码方法: 'target', 'label', 'embedding'
+    high_cardinality_method: 'target'
+    
+    # 高基数阈值
+    high_cardinality_threshold: 50
+    
+    # 目标编码配置
+    target_encoding:
+      # 平滑参数
+      smoothing: 1.0
+      
+      # 最小样本数
+      min_samples_leaf: 1
+      
+      # 噪声水平
+      noise_level: 0.01
+      
+      # 交叉验证折数
+      cv_folds: 5
+    
+    # 独热编码配置
+    onehot_encoding:
+      # 是否删除第一个虚拟变量
+      drop_first: true
+      
+      # 处理未知类别的方式: 'error', 'ignore'
+      handle_unknown: 'ignore'
+      
+      # 最大类别数（超过则不进行独热编码）
+      max_categories: 20
+  
+  # 类别特征预处理
+  preprocessing:
+    # 是否处理稀有类别
+    handle_rare_categories: true
+    
+    # 稀有类别阈值（出现频率低于此值的归为稀有类别）
+    rare_threshold: 0.01
+    
+    # 稀有类别的替换值
+    rare_value: 'RARE'
+
+# 时间特征工程配置
+temporal_features:
+  # 日期列配置
+  date_columns:
+    # 需要处理的日期列
+    columns:
+      - 'DAYS_BIRTH'
+      - 'DAYS_EMPLOYED'
+      - 'DAYS_REGISTRATION'
+      - 'DAYS_ID_PUBLISH'
+    
+    # 是否提取年龄特征
+    extract_age: true
+    
+    # 是否提取就业年限特征
+    extract_employment_duration: true
+    
+    # 是否创建时间差特征
+    create_time_differences: true
+  
+  # 周期性特征
+  cyclical_features:
+    # 是否创建周期性特征
+    enable: false
+    
+    # 周期性特征的列
+    columns: []
+
+# 交叉特征配置
+interaction_features:
+  # 是否启用交叉特征
+  enable: true
+  
+  # 重要特征列表（用于创建交叉特征）
+  important_features:
+    - 'EXT_SOURCE_1'
+    - 'EXT_SOURCE_2'
+    - 'EXT_SOURCE_3'
+    - 'AMT_CREDIT'
+    - 'AMT_INCOME_TOTAL'
+    - 'AMT_ANNUITY'
+    - 'DAYS_BIRTH'
+    - 'DAYS_EMPLOYED'
+  
+  # 交叉特征类型
+  interaction_types:
+    # 乘积交叉
+    multiply: true
+    
+    # 除法交叉
+    divide: true
+    
+    # 差值交叉
+    subtract: true
+    
+    # 加法交叉
+    add: false
+  
+  # 最大交叉特征数量
+  max_interactions: 50
+  
+  # 特征重要性阈值（只有重要性超过此值的特征才参与交叉）
+  importance_threshold: 0.001
+
+# 聚合特征配置
+aggregation_features:
+  # 是否启用聚合特征
+  enable: true
+  
+  # 聚合表配置
+  tables:
+    bureau:
+      # 分组键
+      group_key: 'SK_ID_CURR'
+      
+      # 数值列聚合
+      numerical_aggs:
+        'DAYS_CREDIT': ['min', 'max', 'mean', 'std', 'count']
+        'CREDIT_DAY_OVERDUE': ['max', 'mean', 'sum']
+        'AMT_CREDIT_MAX_OVERDUE': ['max', 'mean', 'sum']
+        'AMT_CREDIT_SUM': ['max', 'mean', 'sum', 'std']
+        'AMT_CREDIT_SUM_DEBT': ['max', 'mean', 'sum', 'std']
+        'AMT_CREDIT_SUM_LIMIT': ['max', 'mean', 'sum']
+        'AMT_ANNUITY': ['max', 'mean']
+        'CNT_CREDIT_PROLONG': ['sum', 'max']
+      
+      # 类别列聚合
+      categorical_aggs:
+        'CREDIT_ACTIVE': ['count', 'nunique']
+        'CREDIT_TYPE': ['count', 'nunique']
+    
+    previous_application:
+      group_key: 'SK_ID_CURR'
+      numerical_aggs:
+        'AMT_ANNUITY': ['min', 'max', 'mean', 'std']
+        'AMT_APPLICATION': ['min', 'max', 'mean', 'std']
+        'AMT_CREDIT': ['min', 'max', 'mean', 'std']
+        'AMT_DOWN_PAYMENT': ['min', 'max', 'mean', 'std']
+        'AMT_GOODS_PRICE': ['min', 'max', 'mean', 'std']
+        'HOUR_APPR_PROCESS_START': ['min', 'max', 'mean']
+        'RATE_DOWN_PAYMENT': ['min', 'max', 'mean']
+        'DAYS_DECISION': ['min', 'max', 'mean']
+        'CNT_PAYMENT': ['min', 'max', 'mean', 'sum']
+      categorical_aggs:
+        'NAME_CONTRACT_STATUS': ['count']
+        'NAME_PAYMENT_TYPE': ['nunique']
+        'CODE_REJECT_REASON': ['nunique']
+    
+    credit_card_balance:
+      group_key: 'SK_ID_CURR'
+      numerical_aggs:
+        'MONTHS_BALANCE': ['min', 'max', 'mean', 'count']
+        'AMT_BALANCE': ['min', 'max', 'mean', 'std']
+        'AMT_CREDIT_LIMIT_ACTUAL': ['min', 'max', 'mean']
+        'AMT_DRAWINGS_CURRENT': ['max', 'mean', 'sum']
+        'AMT_PAYMENT_CURRENT': ['max', 'mean', 'sum']
+        'SK_DPD': ['max', 'mean', 'sum']
+        'SK_DPD_DEF': ['max', 'mean', 'sum']
+      categorical_aggs: {}
+
+# 领域知识特征配置
+domain_features:
+  # 是否启用领域知识特征
+  enable: true
+  
+  # 信贷相关特征
+  credit_features:
+    # 债务收入比
+    debt_to_income: true
+    
+    # 信贷收入比
+    credit_to_income: true
+    
+    # 年金收入比
+    annuity_to_income: true
+    
+    # 信贷年金比
+    credit_to_annuity: true
+  
+  # 人口统计特征
+  demographic_features:
+    # 年龄特征
+    age_features: true
+    
+    # 就业特征
+    employment_features: true
+    
+    # 收入稳定性特征
+    income_stability: true
+  
+  # EXT_SOURCE组合特征
+  ext_source_features:
+    # 均值
+    mean: true
+    
+    # 标准差
+    std: true
+    
+    # 最大值
+    max: true
+    
+    # 最小值
+    min: true
+    
+    # 乘积
+    product: true
+    
+    # 两两组合
+    pairwise_combinations: true
+
+# 特征选择配置
+feature_selection:
+  # 是否启用特征选择
+  enable: true
+  
+  # 过滤法配置
+  filter_methods:
+    # 方差选择
+    variance_threshold:
+      enable: true
+      threshold: 0.01
+    
+    # 相关性选择
+    correlation_threshold:
+      enable: true
+      threshold: 0.95
+    
+    # 互信息选择
+    mutual_info:
+      enable: true
+      k_best: 500
+    
+    # 卡方检验（仅适用于非负特征）
+    chi2:
+      enable: false
+      k_best: 100
+  
+  # 包裹法配置
+  wrapper_methods:
+    # 递归特征消除
+    rfe:
+      enable: false
+      n_features_to_select: 100
+      step: 10
+  
+  # 嵌入法配置
+  embedded_methods:
+    # L1正则化
+    l1_regularization:
+      enable: true
+      C: 0.01
+    
+    # 树模型特征重要性
+    tree_importance:
+      enable: true
+      threshold: 0.001
+
+# 特征验证配置
+feature_validation:
+  # 是否检查特征质量
+  check_quality: true
+  
+  # 最大缺失值比例
+  max_missing_ratio: 0.9
+  
+  # 最小方差
+  min_variance: 1e-6
+  
+  # 是否检查特征分布
+  check_distribution: true
+  
+  # 是否检查特征相关性
+  check_correlation: true
+
+# 输出配置
+output:
+  # 是否保存特征重要性
+  save_feature_importance: true
+  
+  # 是否保存特征统计信息
+  save_feature_stats: true
+  
+  # 是否生成特征工程报告
+  generate_report: true
+  
+  # 输出目录
+  output_dir: './outputs/features'
