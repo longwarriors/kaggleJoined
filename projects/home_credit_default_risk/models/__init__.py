@@ -11,11 +11,13 @@ from .trainers import ModelTrainer
 from .ensemble import EnsembleModel
 from .evaluator import ModelEvaluator
 from .optimizer import HyperparameterOptimizer
+from .serializer import ModelSerializer
 
 __all__ = [
-    'BaselineModel',
-    'ModelTrainer',
-    'EnsembleModel',
-    'ModelEvaluator',
-    'HyperparameterOptimizer'
+    "BaselineModel",
+    "ModelTrainer",
+    "EnsembleModel",
+    "ModelEvaluator",
+    "HyperparameterOptimizer",
+    "ModelSerializer",
 ]

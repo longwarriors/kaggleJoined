@@ -6,12 +6,10 @@
 作者：Augment Agent
 """
 
-from .feature_pipeline import FeaturePipeline
-from .model_pipeline import ModelPipeline
 from .main_pipeline import HomeCreditPipeline
+from .inference_pipeline import InferencePipeline
 
 __all__ = [
-    'FeaturePipeline',
-    'ModelPipeline',
-    'HomeCreditPipeline'
+    "HomeCreditPipeline",
+    "InferencePipeline",
 ]

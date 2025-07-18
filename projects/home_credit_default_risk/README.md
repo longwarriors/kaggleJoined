@@ -173,6 +173,82 @@ python test_pipeline.py
 - ✅ 继承了成功的业务逻辑和领域知识
 - ✅ 维持了0.789的AUC性能目标
 
+## 🔧 模型保存和推理
+
+### 模型自动保存
+训练完成后，所有模型会自动保存到 `outputs/` 目录：
+- **模型文件**: `outputs/models/` - 训练好的模型
+- **元数据**: `outputs/metadata/` - 模型性能和配置信息
+- **特征工程器**: `outputs/feature_builder.pkl` - 特征处理管道
+
+### 推理使用
+
+#### 1. 批量预测
+```bash
+# 基本用法
+python predict.py --input test_data.csv --output predictions.csv
+
+# 指定特定模型
+python predict.py --input test_data.csv --output predictions.csv --models lgb_1,lgb_2
+
+# 详细输出
+python predict.py --input test_data.csv --output predictions.csv --verbose
+```
+
+#### 2. 单样本预测
+```bash
+python predict.py --single --data '{"AMT_INCOME_TOTAL": 200000, "AMT_CREDIT": 400000, "AMT_ANNUITY": 25000}'
+```
+
+#### 3. 编程接口
+```python
+from pipeline.inference_pipeline import InferencePipeline
+
+# 初始化推理管线
+pipeline = InferencePipeline()
+pipeline.load_models(latest=True)
+pipeline.load_feature_builder()
+
+# 单样本预测
+result = pipeline.predict_single({
+    'AMT_INCOME_TOTAL': 200000,
+    'AMT_CREDIT': 400000,
+    'AMT_ANNUITY': 25000
+})
+
+# 批量预测
+pipeline.batch_predict('test.csv', 'predictions.csv')
+```
+
+### 模型管理
+```python
+from models.serializer import ModelSerializer
+
+serializer = ModelSerializer()
+
+# 列出所有模型
+models = serializer.list_available_models()
+
+# 加载特定模型
+model, metadata = serializer.load_model(
+    model_name='lgb_1',
+    model_type='lightgbm'
+)
+
+# 删除旧模型
+serializer.delete_model(
+    model_name='old_model',
+    model_type='lightgbm',
+    version='v20240101'
+)
+```
+
+### 推理演示
+```bash
+# 查看完整的推理功能演示
+python inference_example.py
+```
+
 ---
 
-**重构版本说明**: 专注于代码架构和工程质量的提升，在保持原有性能的基础上，大幅提升了代码的可维护性、可扩展性和生产就绪程度。
+**重构版本说明**: 专注于代码架构和工程质量的提升，在保持原有性能的基础上，大幅提升了代码的可维护性、可扩展性和生产就绪程度。现在包含完整的模型保存和推理系统，可以直接部署到生产环境。
